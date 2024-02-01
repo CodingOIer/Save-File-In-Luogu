@@ -2,7 +2,7 @@
 Author: CodingOIer redefinition0726@163.com
 Date: 2024-01-29 16:50:37
 LastEditors: CodingOIer redefinition0726@163.com
-LastEditTime: 2024-01-29 17:33:43
+LastEditTime: 2024-02-01 16:14:49
 FilePath: \Save-File-In-Luogu\main.py
 
 Copyright (c) 2024 by CodingOIer, All Rights Reserved.
@@ -31,7 +31,7 @@ def getCsrf(cookie):
 
 
 def makeHeader(cookie):
-    csrf = getCsrf()
+    csrf = getCsrf(cookie)
     res = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36',
         '_contentOnly': 'WoXiHuanFanQianXing',
@@ -43,6 +43,25 @@ def makeHeader(cookie):
         "content-type": 'application/json',
     }
     return res
+
+
+def punchPaste(code, cookie):
+    header = makeHeader(cookie)
+    data = {
+        'public': 'false',
+        'data': code,
+    }
+    res = requests.post("https://www.luogu.com.cn/paste/new",
+                        headers=header, json=data).text
+    if len(res) != 17:
+        return res
+    else:
+        r = ''
+        i = 7
+        while i <= 14:
+            r += res[i]
+            i += 1
+        return r
 
 
 def inputCookie():
@@ -80,6 +99,7 @@ def getCookie():
     while i < len(temp):
         client_id += temp[i]
         i += 2
+    f.close()
     if (len(client_id) != 40 or len(uid) == 0):
         return 'RE'
     return '__client_id=' + client_id + ';_uid=' + uid + ';'
@@ -100,29 +120,55 @@ if __name__ == '__main__':
     except:
         print('''Can't find config file, please input again''')
         inputCookie()
-    # print(getCookie())
+    cookie = getCookie()
     clear()
-    print('Start while')
     while True:
         command = input()
         if command == 'exit':
             clear()
             print('Programming will exit in 1 second')
-            time.sleep(1)
+            time.sleep(3)
             break
         elif command == 'logout':
             clear()
             print('Config file will remove, and programming will exit in 1 second')
             os.system('del .\\.config')
-            time.sleep(1)
+            time.sleep(3)
             break
         else:
-            f = open(command, 'r')
-            temp = f.readlines()
-            f.close()
-            file = ''
-            for i in temp:
-                file += i
-            submit = "`" + \
-                str(datetime.datetime.now(pytz.timezone('Asia/Shanghai'))
-                    ) + "`" + '\n' + "```" + '\n' + file + '\n' + "```"
+            try:
+                f = open(command, 'r', encoding='utf-8')
+                temp = f.readlines()
+                f.close()
+                file = ''
+                for i in temp:
+                    file += i
+                last = ''
+                l = len(command)
+                i = l - 1
+                while i >= 0 and command[i] != '\\' and command[i] != '.':
+                    last = command[i] + last
+                    i -= 1
+                if command[i] == '\\':
+                    last = 'plain'
+                line = ["""```plain""", """time: """ + str(datetime.datetime.now(pytz.timezone(
+                    'Asia/Shanghai'))), """file: """ + command, """```""", """""", """```""" + last, file, """```"""]
+                l = len(line)
+                submit = ''
+                for i in range(l):
+                    submit += line[i]
+                    submit += '\n'
+                res = punchPaste(submit, cookie)
+                if res == 'RE':
+                    print("Can't punch paste, error message is " + res)
+                    time.sleep(3)
+                    clear()
+                else:
+                    print(
+                        "The link of your paste is https://www.luogu.com.cn/paste/" + res)
+                    time.sleep(3)
+                    clear()
+            except:
+                print("Can't open submit file")
+                time.sleep(3)
+                clear()
