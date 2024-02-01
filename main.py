@@ -2,7 +2,7 @@
 Author: CodingOIer redefinition0726@163.com
 Date: 2024-01-29 16:50:37
 LastEditors: CodingOIer redefinition0726@163.com
-LastEditTime: 2024-02-01 16:14:49
+LastEditTime: 2024-02-01 16:51:08
 FilePath: \Save-File-In-Luogu\main.py
 
 Copyright (c) 2024 by CodingOIer, All Rights Reserved.
@@ -109,7 +109,13 @@ def clear():
     os.system('cls')
 
 
+def add(f, msg, p, tip):
+    f.write(f"[{p}]: {tip} is {msg}\n")
+    f.flush()
+
+
 if __name__ == '__main__':
+    os.system('chcp 65001')
     clear()
     try:
         f = open('./.config', 'r')
@@ -122,20 +128,31 @@ if __name__ == '__main__':
         inputCookie()
     cookie = getCookie()
     clear()
+    log = open('log.txt', 'w')
     while True:
         command = input()
+        command.encode('utf-8')
+        add(log, command, 'INFO', 'User input')
         if command == 'exit':
             clear()
-            print('Programming will exit in 1 second')
+            print('Programming will exit in 3 second')
             time.sleep(3)
+            add(log, 'user', '[INFO]', 'Exit by ')
+            log.close()
             break
         elif command == 'logout':
             clear()
-            print('Config file will remove, and programming will exit in 1 second')
+            print('Config file will remove, and programming will exit in 3 second')
             os.system('del .\\.config')
             time.sleep(3)
+            add(log, 'user', 'INFO', 'Logout by ')
+            log.close()
             break
         else:
+            if command[0] == '"' and command[len(command) - 1] == '"':
+                command = command[1:]
+                command = command[:len(command) - 1]
+                add(log, command, 'INFO', 'Format command to ')
             try:
                 f = open(command, 'r', encoding='utf-8')
                 temp = f.readlines()
@@ -151,8 +168,8 @@ if __name__ == '__main__':
                     i -= 1
                 if command[i] == '\\':
                     last = 'plain'
-                line = ["""```plain""", """time: """ + str(datetime.datetime.now(pytz.timezone(
-                    'Asia/Shanghai'))), """file: """ + command, """```""", """""", """```""" + last, file, """```"""]
+                line = ["""```plain""", """file: """, """time: """ + str(datetime.datetime.now(pytz.timezone(
+                    'Asia/Shanghai'))) + command, """```""", """""", """```""" + last, file, """```"""]
                 l = len(line)
                 submit = ''
                 for i in range(l):
@@ -160,15 +177,18 @@ if __name__ == '__main__':
                     submit += '\n'
                 res = punchPaste(submit, cookie)
                 if res == 'RE':
+                    add(log, res, 'ERROR', 'Punch to paste report error message is ')
                     print("Can't punch paste, error message is " + res)
                     time.sleep(3)
                     clear()
                 else:
                     print(
                         "The link of your paste is https://www.luogu.com.cn/paste/" + res)
-                    time.sleep(3)
+                    print("Press any key to continue")
+                    input()
                     clear()
             except:
                 print("Can't open submit file")
+                add(log, 'file', 'ERROR', 'Run error in ')
                 time.sleep(3)
                 clear()
